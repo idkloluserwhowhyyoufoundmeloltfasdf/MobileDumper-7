@@ -1,32 +1,40 @@
-name: iOS dylib build
+name: Android build
 
 on:
-  workflow_dispatch:
   push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  build-ios-dylib:
-    runs-on: macos-14
+  build:
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Check out repository and submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Install Ninja
+      - name: Install build tools
         run: |
-          brew install ninja
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
 
-      - name: Build iOS dylib
+      - name: Install Android NDK
+        run: sdkmanager "ndk;27.2.12479018"
+
+      - name: Build Android arm64 library
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
         run: |
           chmod +x build.sh
-          ./build.sh --platform ios --target dylib --build release
+          ./build.sh --platform android --target lib --build release --arch arm64
 
-      - name: Upload artifact
+      - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: MobileDumper-7-ios-dylib
-          path: |
-            builds/ios/dylib/release/arm64/libMobileDumper-7.dylib
-            builds/ios/dylib/release/arm64/libMobileDumper-7.dylib.dSYM
+          name: android-arm64-release
+          path: builds/android/lib/release/arm64/libMobileDumper-7.so
