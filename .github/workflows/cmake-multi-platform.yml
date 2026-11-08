@@ -1,0 +1,32 @@
+name: iOS dylib build
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build-ios-dylib:
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Ninja
+        run: |
+          brew install ninja
+
+      - name: Build iOS dylib
+        run: |
+          chmod +x build.sh
+          ./build.sh --platform ios --target dylib --build release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MobileDumper-7-ios-dylib
+          path: |
+            builds/ios/dylib/release/arm64/libMobileDumper-7.dylib
+            builds/ios/dylib/release/arm64/libMobileDumper-7.dylib.dSYM
